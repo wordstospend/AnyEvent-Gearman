@@ -4,6 +4,7 @@ use Any::Moose;
 use AnyEvent::Gearman::Types;
 use AnyEvent::Gearman::Task;
 use AnyEvent::Gearman::Client::Connection;
+use String::CRC32;
 
 has job_servers => (
     is       => 'rw',
@@ -40,8 +41,12 @@ sub _add_task {
             return;
         }
 
-        # TODO: hashed server selector
-        my $js = @js[int rand @js];
+        # hashed based on the concatinating of funciton and workload as strings
+	my $index = @js;
+
+	$index = crc32($function . $workload) % $index;
+        my $js = $js[$index];
+
         $js->add_task(
             $task,
 
